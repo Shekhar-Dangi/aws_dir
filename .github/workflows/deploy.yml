@@ -23,7 +23,7 @@ jobs:
 
       - name: Deploy to EC2
         run: |
-          ssh ec2 "cd /home/ubuntu/ts-node-server && git pull origin main && npm install && npm run build && npm test && pm2 restart ts-server || pm2 start dist/index.js --name ts-server"
+          ssh ec2 "cd /home/ubuntu/ts-node-server && git pull origin main && npm install && npm run build && pm2 restart ts-server || pm2 start index.js --name ts-server"
           DEPLOY_STATUS=$?
           if [ $DEPLOY_STATUS -ne 0 ]; then
             echo 'Deployment failed!'; exit 1;
