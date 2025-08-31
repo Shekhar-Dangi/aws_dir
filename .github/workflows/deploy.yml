@@ -16,15 +16,16 @@ jobs:
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_KEY }}" > ~/.ssh/deploy_key
+          echo "${{ secrets.EC2_KEY }}" | tr -d '\r' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-            echo -e "Host ec2\n\tHostName ${{ secrets.EC2_HOST }}\n\tUser ${{ secrets.EC2_USER }}\n\tIdentityFile ~/.ssh/deploy_key\n\tStrictHostKeyChecking yes" >> ~/.ssh/config
-            ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+          printf "Host ec2\n\tHostName ${{ secrets.EC2_HOST }}\n\tUser ${{ secrets.EC2_USER }}\n\tIdentityFile ~/.ssh/deploy_key\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
 
       - name: Deploy to EC2
         run: |
-          ssh ec2 "cd /home/ubuntu/ts-node-server && git pull origin main && npm install && npm run build && pm2 restart ts-server || pm2 start index.js --name ts-server"
-          DEPLOY_STATUS=$?
-          if [ $DEPLOY_STATUS -ne 0 ]; then
-            echo 'Deployment failed!'; exit 1;
-          fi
+          ssh ec2 "
+            cd ~/aws_dir && \
+            git pull origin main && \
+            npm install && \
+            npm run build && \
+            pm2 restart ts-server || pm2 start index.js --name ts-server
+          "
