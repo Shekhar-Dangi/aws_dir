@@ -28,4 +28,4 @@ jobs:
       - name: Deploy over SSH
         run: |
           ssh -i ~/.ssh/ec2_key ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
-            "cd /home/${{ secrets.EC2_USER }}/app && git pull && pm2 restart all"
+            "cd ~/aws_dir && git pull && npm run build && pm2 restart ts-server || pm2 start index.js --name ts-server"
