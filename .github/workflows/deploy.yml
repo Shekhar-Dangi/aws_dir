@@ -3,29 +3,24 @@ name: Deploy to EC2
 on:
   push:
     branches:
-      - main
+      - main # or your branch
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Setup SSH
+      - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_KEY }}" | tr -d '\r' > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          printf "Host ec2\n\tHostName ${{ secrets.EC2_HOST }}\n\tUser ${{ secrets.EC2_USER }}\n\tIdentityFile ~/.ssh/deploy_key\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/ec2_key
+          chmod 600 ~/.ssh/ec2_key
 
-      - name: Deploy to EC2
+      - name: Deploy over SSH
         run: |
-          ssh ec2 "
-            cd ~/aws_dir && \
-            git pull origin main && \
-            npm install && \
-            npm run build && \
-            pm2 restart ts-server || pm2 start index.js --name ts-server
-          "
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/ec2_key \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
+            "cd /home/${{ secrets.EC2_USER }}/app && git pull && pm2 restart all"
